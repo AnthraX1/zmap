@@ -22,7 +22,7 @@
 #include "../lib/includes.h"
 #include "../lib/logger.h"
 #include "../lib/random.h"
-#include "../lib/blacklist.h"
+#include "../lib/blocklist.h"
 #include "../lib/lockfd.h"
 #include "../lib/pbm.h"
 
@@ -99,7 +99,7 @@ iterator_t *send_init(void)
 	iterator_t *it;
 	uint32_t num_subshards =
 	    (uint32_t)zconf.senders * (uint32_t)zconf.total_shards;
-	if (num_subshards > blacklist_count_allowed()) {
+	if (num_subshards > blocklist_count_allowed()) {
 		log_fatal("send", "senders * shards > allowed probes");
 	}
 	if (zsend.max_targets && (num_subshards > zsend.max_targets)) {
@@ -271,7 +271,7 @@ int send_run(sock_t st, shard_t *s)
 	int interval = 0;
 	volatile int vi;
 	struct timespec ts, rem;
-	double send_rate = (double)zconf.rate / zconf.senders;
+	double send_rate = (double)zconf.rate / ((double)zconf.senders * zconf.batch);
 	const double slow_rate = 50; // packets per seconds per thread
 	// at which it uses the slow methods
 	long nsec_per_sec = 1000 * 1000 * 1000;
@@ -287,8 +287,8 @@ int send_run(sock_t st, shard_t *s)
 			for (vi = delay; vi--;)
 				;
 			delay *= 1 / (now() - last_time) /
-				 (zconf.rate / zconf.senders);
-			interval = (zconf.rate / zconf.senders) / 20;
+				 ((double)zconf.rate / ((double)zconf.senders * zconf.batch));
+			interval = ((double)zconf.rate / ((double)zconf.senders * zconf.batch)) / 20;
 			last_time = now();
 		}
 	}
@@ -308,7 +308,6 @@ int send_run(sock_t st, shard_t *s)
 		if (zconf.list_of_ips_filename) {
 			while (!pbm_check(zsend.list_of_ips_pbm, current_ip)) {
 				current_ip = shard_get_next_ip(s);
-				s->state.tried_sent++;
 				if (current_ip == ZMAP_SHARD_DONE) {
 					log_debug(
 						"send",
@@ -323,7 +322,7 @@ int send_run(sock_t st, shard_t *s)
 	uint32_t idx = 0;
 	while (1) {
 		// Adaptive timing delay
-		send_rate = (double)zconf.rate / zconf.senders;
+		send_rate = (double)zconf.rate / ((double)zconf.senders * zconf.batch);
 		if (count && delay > 0) {
 			if (send_rate < slow_rate) {
 				double t = now();
@@ -451,7 +450,7 @@ int send_run(sock_t st, shard_t *s)
 					}
 				}
 				if (!any_sends_successful) {
-					s->state.failures++;
+					s->state.packets_failed++;
 				}
 				idx++;
 				idx &= 0xFF;
@@ -459,8 +458,7 @@ int send_run(sock_t st, shard_t *s)
 		}
 
 		// Track the number of hosts we actually scanned.
-		s->state.sent++;
-		s->state.tried_sent++;
+		s->state.hosts_scanned++;
 
 		// IPv6
 		if (ipv6) {
@@ -478,7 +476,6 @@ int send_run(sock_t st, shard_t *s)
 				// to scan is on the list.
 				while (!pbm_check(zsend.list_of_ips_pbm, current_ip)) {
 					current_ip = shard_get_next_ip(s);
-					s->state.tried_sent++;
 					if (current_ip == ZMAP_SHARD_DONE) {
 						log_debug(
 							"send",

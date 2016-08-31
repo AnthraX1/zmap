@@ -91,7 +91,8 @@ int upnp_validate_packet(const struct ip *ip_hdr, uint32_t len,
 
 void upnp_process_packet(const u_char *packet,
 			 __attribute__((unused)) uint32_t len, fieldset_t *fs,
-			 __attribute__((unused)) uint32_t *validation)
+			 __attribute__((unused)) uint32_t *validation,
+			 __attribute__((unused)) struct timespec ts)
 {
 	struct ip *ip_hdr = (struct ip *)&packet[sizeof(struct ether_header)];
 	if (ip_hdr->ip_p == IPPROTO_UDP) {
@@ -294,7 +295,7 @@ probe_module_t module_upnp = {
     .make_packet = &udp_make_packet,
     .print_packet = &udp_print_packet,
     .process_packet = &upnp_process_packet,
-    .validate_packet = &upnp_validate_packet,
+    .validate_packet = &udp_validate_packet,
     // UPnP isn't actually dynamic, however, we don't handle escaping
     // properly in the CSV module and this will force users to use JSON.
     .output_type = OUTPUT_TYPE_DYNAMIC,

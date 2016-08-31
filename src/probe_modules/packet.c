@@ -97,15 +97,9 @@ void fprintf_eth_header(FILE *fp, struct ether_header *ethh)
 
 void make_eth_header(struct ether_header *ethh, macaddr_t *src, macaddr_t *dst)
 {
-	// Create a frame with IPv4 ethertype by default
-	make_eth_header_ethertype(ethh, src, dst, ETHERTYPE_IP);
-}
-
-void make_eth_header_ethertype(struct ether_header *ethh, macaddr_t *src, macaddr_t *dst, uint16_t ethertype)
-{
 	memcpy(ethh->ether_shost, src, ETHER_ADDR_LEN);
 	memcpy(ethh->ether_dhost, dst, ETHER_ADDR_LEN);
-	ethh->ether_type = htons(ethertype);
+	ethh->ether_type = htons(ETHERTYPE_IP);
 }
 
 void make_ip_header(struct ip *iph, uint8_t protocol, uint16_t len)
@@ -114,7 +108,7 @@ void make_ip_header(struct ip *iph, uint8_t protocol, uint16_t len)
 	iph->ip_v = 4;   // IPv4
 	iph->ip_tos = 0; // Type of Service
 	iph->ip_len = len;
-	iph->ip_id = htons(54321); // identification number
+	iph->ip_id = rand(); // random identification number
 	iph->ip_off = 0;	   // fragmentation flag
 	iph->ip_ttl = MAXTTL;      // time to live (TTL)
 	iph->ip_p = protocol;      // upper layer protocol => TCP
