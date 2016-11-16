@@ -55,6 +55,17 @@ More information can be found using the `--help` flag.
 As targets for your IPv6 measurements you can e.g. use addresses from our [IPv6 Hitlist Service](https://ipv6hitlist.github.io/).
 
 
+IPv6 support
+------------
+
+We added IPv6 support to ZMap and include the following new probe modules:
+
+* ICMPv6 Echo Request
+* IPv6 TCP SYN (any port)
+* IPV6 UDP (any port and payload)
+
+More information and access to our IPv6 hitlist is available on [our website](https://net.in.tum.de/pub/ipv6-hitlist/).
+
 License and Copyright
 ---------------------
 
