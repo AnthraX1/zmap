@@ -6,8 +6,7 @@
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
  */
 
-// probe module for performing TCP Opt scans
-// based on TCP SYN module, with changes by Quirin Scheitle and Markus Sosnowski
+// probe module for performing TCP SYN scans
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -63,6 +62,7 @@ int tcpsynopt_global_initialize(struct state_conf *conf)
 	*c++ = 0;
 
 	if (strcmp(args, "hex") == 0) {
+		printf("parsing hex options: %s \n", c);
 		tcp_send_opts_len = strlen(c) / 2;
 		if(strlen(c)/2 %4 != 0){
 			printf("tcp options are not multiple of 4, please pad with NOPs (0x01)!\n");
@@ -112,8 +112,8 @@ int tcpsynopt_init_perthread(void* buf, macaddr_t *src,
 	return EXIT_SUCCESS;
 }
 
-int tcpsynopt_make_packet(void *buf, UNUSED size_t *buf_len, ipaddr_n_t src_ip, ipaddr_n_t dst_ip,
-		uint8_t ttl, uint32_t *validation, int probe_num, __attribute__((unused)) void *arg)
+int tcpsynopt_make_packet(void *buf, ipaddr_n_t src_ip, ipaddr_n_t dst_ip,
+		uint32_t *validation, int probe_num, __attribute__((unused)) void *arg)
 {
 	struct ether_header *eth_header = (struct ether_header *)buf;
 	struct ip *ip_header = (struct ip*)(&eth_header[1]);
@@ -123,7 +123,6 @@ int tcpsynopt_make_packet(void *buf, UNUSED size_t *buf_len, ipaddr_n_t src_ip, 
 
 	ip_header->ip_src.s_addr = src_ip;
 	ip_header->ip_dst.s_addr = dst_ip;
-	ip_header->ip_ttl = ttl;
 
 	tcp_header->th_sport = htons(get_src_port(num_ports,
 				probe_num, validation));
@@ -215,6 +214,26 @@ void tcpsynopt_process_packet(const u_char *packet,
 	tcpsynopt_process_packet_parse(len, fs,tcp,optionbytes2);
 	return;
 }
+
+static fielddef_t fields[] = {
+	{.name = "sport",  .type = "int", .desc = "TCP source port"},
+	{.name = "dport",  .type = "int", .desc = "TCP destination port"},
+	{.name = "seqnum", .type = "int", .desc = "TCP sequence number"},
+	{.name = "acknum", .type = "int", .desc = "TCP acknowledgement number"},
+	{.name = "window", .type = "int", .desc = "TCP window"},
+	{.name = "tcpmss", .type = "int", .desc = "TCP mss"},
+	{.name = "tsval", .type = "int", .desc = "tsval"},
+	{.name = "tsecr", .type = "int", .desc = "tsecr"},
+	{.name = "tsdiff", .type = "int", .desc = "tsval"},
+	{.name = "wscale", .type = "int", .desc = "tsval"},
+	{.name = "mptcpkey", .type = "string", .desc = "tsval"},
+	{.name = "mptcpdiff", .type = "int", .desc = "tsval"},
+	{.name = "tfocookie", .type = "int", .desc = "tsval"},
+	{.name = "optionshex", .type = "string", .desc = "TCP options"},
+	{.name = "optionstext", .type = "string", .desc = "TCP options"},
+	{.name = "classification", .type="string", .desc = "packet classification"},
+	{.name = "success", .type="bool", .desc = "is response considered success"}
+};
 
 probe_module_t module_tcp_synopt = {
 	.name = "tcp_synopt",
