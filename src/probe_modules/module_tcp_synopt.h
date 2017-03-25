@@ -117,26 +117,34 @@ static inline void tcpsynopt_process_packet_parse(
 				i=option_bytes;
 			}
 			break;
-		case 30: // MPTCP 
-				snprintf(&buft[j],7,"MPTCP-"); j=j+6;
-				// check that key is different from sent key
-				static char *mptcpbuf;
-				mptcpbuf = xmalloc(19+19); // should be 19, but safety buffer it!
-				//snprintf(mptcpbuf,19,"0x%016llx", (unsigned long long)*(uint64_t*) &opts[i+4]); 
-				snprintf(&mptcpbuf[0],3,"0x");
-				snprintf(&mptcpbuf[2],3,"%02x",0xff & opts[i+4]); 
-				snprintf(&mptcpbuf[4],3,"%02x",0xff & opts[i+5]); 
-				snprintf(&mptcpbuf[6],3,"%02x",0xff & opts[i+6]); 
-				snprintf(&mptcpbuf[8],3,"%02x",0xff & opts[i+7]); 
-				snprintf(&mptcpbuf[10],3,"%02x",0xff & opts[i+8]); 
-				snprintf(&mptcpbuf[12],3,"%02x",0xff & opts[i+9]); 
-				snprintf(&mptcpbuf[14],3,"%02x",0xff & opts[i+10]); 
-				snprintf(&mptcpbuf[16],3,"%02x",0xff & opts[i+11]); 
-				fs_modify_string(fs, "mptcpkey", (char*) mptcpbuf,1);
-				fs_modify_uint64(fs, "mptcpdiff", 1^(0x0c0c0c0c0c0c0c0c == *(uint64_t*)&opts[i+4]));
-		
-				i=i+(unsigned int)(0xff & opts[i+1]);
-				break;									
+		case 27: // Quick Start/ Response
+			snprintf(&buft[j],3,"QS-"); j=j+3;
+
+			fs_modify_uint64(fs, "qsfunc", (uint64_t)((*(unsigned char*) &opts[i+2]) >> 4));
+			fs_modify_uint64(fs, "qsttl", (uint64_t)(*(unsigned char*) &opts[i+3]));
+			fs_modify_uint64(fs, "qsnonce", (uint64_t)(ntohl((*(unsigned int*) &opts[i+4])>> 2)));
+			i=i+8;
+			break;
+		case 30: // MPTCP
+			snprintf(&buft[j],7,"MPTCP-"); j=j+6;
+			// check that key is different from sent key
+			static char *mptcpbuf;
+			mptcpbuf = xmalloc(19+19); // should be 19, but safety buffer it!
+			//snprintf(mptcpbuf,19,"0x%016llx", (unsigned long long)*(uint64_t*) &opts[i+4]);
+			snprintf(&mptcpbuf[0],3,"0x");
+			snprintf(&mptcpbuf[2],3,"%02x",0xff & opts[i+4]);
+			snprintf(&mptcpbuf[4],3,"%02x",0xff & opts[i+5]);
+			snprintf(&mptcpbuf[6],3,"%02x",0xff & opts[i+6]);
+			snprintf(&mptcpbuf[8],3,"%02x",0xff & opts[i+7]);
+			snprintf(&mptcpbuf[10],3,"%02x",0xff & opts[i+8]);
+			snprintf(&mptcpbuf[12],3,"%02x",0xff & opts[i+9]);
+			snprintf(&mptcpbuf[14],3,"%02x",0xff & opts[i+10]);
+			snprintf(&mptcpbuf[16],3,"%02x",0xff & opts[i+11]);
+			fs_modify_string(fs, "mptcpkey", (char*) mptcpbuf,1);
+			fs_modify_uint64(fs, "mptcpdiff", 1^(0x0c0c0c0c0c0c0c0c == *(uint64_t*)&opts[i+4]));
+
+			i=i+(unsigned int)(0xff & opts[i+1]);
+			break;
 		case 34: // TFO
 				if((unsigned int)(0xff & opts[i+1])>2){
 					// response with cookie
@@ -165,14 +173,6 @@ static inline void tcpsynopt_process_packet_parse(
 				snprintf(&buft[j],2,"X"); j++;
 				i=i+ (unsigned int)(0xff & opts[i+1]);
 				break;
-		case 6: // obsolete
-				snprintf(&buft[j],2,"X"); j++;
-				i=i+6;
-				break;
-		case 7: // obsolete
-				snprintf(&buft[j],2,"X"); j++;
-				i=i+6;
-				break;
 		case 9: // obsolete
 				snprintf(&buft[j],2,"X"); j++;
 				i=i+2;
@@ -196,11 +196,7 @@ static inline void tcpsynopt_process_packet_parse(
 		case 19: // obsolete
 				snprintf(&buft[j],2,"X"); j++;
 				i=i+18;
-				break;				
-		case 27: // obsolete
-				snprintf(&buft[j],2,"X"); j++;
-				i=i+8;
-				break;	
+				break;
 		case 28: // obsolete
 				snprintf(&buft[j],2,"X"); j++;
 				i=i+4;
