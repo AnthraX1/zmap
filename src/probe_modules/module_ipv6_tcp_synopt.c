@@ -9,10 +9,6 @@
 // probe module for performing TCP SYN OPT scans over IPv6
 // based on TCP SYN module, with changes by Quirin Scheitle and Markus Sosnowski
 
-// Needed for asprintf
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE 1
-#endif
 
 
 #include <stdlib.h>
