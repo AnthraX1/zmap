@@ -35,7 +35,9 @@ probe_module_t module_icmp6_echoscan;
 int icmp6_echo_global_initialize(struct state_conf *conf)
 {
 	// Only look at received packets destined to the specified scanning address (useful for parallel zmap scans)
-	asprintf(&module_icmp6_echoscan.pcap_filter, "%s && ip6 dst host %s", module_icmp6_echoscan.pcap_filter, conf->ipv6_source_ip);
+	if (asprintf((char ** restrict) &module_icmp6_echoscan.pcap_filter, "%s && ip6 dst host %s", module_icmp6_echoscan.pcap_filter, conf->ipv6_source_ip) == -1) {
+		return 1;
+	}
 
 	return EXIT_SUCCESS;
 }
