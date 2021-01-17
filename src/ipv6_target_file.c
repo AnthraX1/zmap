@@ -45,13 +45,16 @@ int ipv6_target_file_get_ipv6(struct in6_addr *dst)
 	if (fgets(line, sizeof(line), fp) != NULL) {
 		// Remove newline
 		char *pos;
+
 		if ((pos = strchr(line, '\n')) != NULL) {
 			*pos = '\0';
 		}
-		int rc = inet_pton(AF_INET6, line, dst);
-		if (rc != 1) {
+		if(line[0]!='#'){
+			int rc = inet_pton(AF_INET6, line, dst);
+			if (rc != 1) {
 			log_fatal(LOGGER_NAME, "could not parse IPv6 address from line: %s: %s", line, strerror(errno));
 			return 1;
+		}
 		}
 	} else {
 		return 1;

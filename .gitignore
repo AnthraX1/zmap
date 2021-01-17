@@ -37,3 +37,4 @@ install_manifest.txt
 _CPack_Packages/*
 src/ztests
 src/zblocklist
+src/zblocklist

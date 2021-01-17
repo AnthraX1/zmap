@@ -20,6 +20,15 @@ set(OUTPUT_MODULE_SOURCES
     output_modules/output_modules.c
 )
 
+
+if(STATIC_LINK)
+    add_definitions("-DSTATIC_LINK")
+    find_package (Threads)
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+    SET(BUILD_SHARED_LIBS OFF)
+    SET(CMAKE_EXE_LINKER_FLAGS "-static -pthread -lpthread --enable-static-nss")
+endif()
+
 # Handle optional output modules
 if(WITH_REDIS)
     set(OUTPUT_MODULE_SOURCES ${OUTPUT_MODULE_SOURCES} output_modules/module_redis_packed.c output_modules/module_redis_csv.c)
@@ -233,12 +242,14 @@ target_link_libraries(
     ${DNET_LIBRARIES}
     ${REDIS_LIBS}
     ${JSON_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 target_link_libraries(
     zblocklist
     zmaplib
     m
+   ${CMAKE_THREAD_LIBS_INIT}
 )
 
 target_link_libraries(
@@ -246,12 +257,14 @@ target_link_libraries(
     zmaplib
     gmp
     m
+   ${CMAKE_THREAD_LIBS_INIT}
 )
 
 target_link_libraries(
     ztee
     zmaplib
     m
+    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 target_link_libraries(
@@ -262,6 +275,7 @@ target_link_libraries(
     ${DNET_LIBRARIES}
     ${REDIS_LIBS}
     ${JSON_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 # Install binary
