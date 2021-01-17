@@ -11,6 +11,7 @@ typedef unsigned short __attribute__((__may_alias__)) alias_unsigned_short;
 void make_eth_header(struct ether_header *ethh, macaddr_t *src, macaddr_t *dst);
 void make_eth_header_ethertype(struct ether_header *ethh, macaddr_t *src, macaddr_t *dst, uint16_t ether_type);
 
+
 void make_ip_header(struct ip *iph, uint8_t, uint16_t);
 void make_ip6_header(struct ip6_hdr *iph, uint8_t, uint16_t);
 void make_tcp_header(struct tcphdr *, port_h_t, uint16_t);
@@ -33,6 +34,19 @@ static inline unsigned short in_checksum(unsigned short *ip_pkt, int len)
 	return (unsigned short)(~sum);
 }
 
+static inline unsigned short in_icmp_checksum(unsigned short *ip_pkt, int len)
+{
+	unsigned long sum = 0;
+	for (int nwords = len / 2; nwords > 0; nwords--) {
+		sum += *ip_pkt++;
+	}
+	if (len % 2 == 1) {
+		sum += *((unsigned char *) ip_pkt);
+	}
+	sum = (sum >> 16) + (sum & 0xffff);
+	return (unsigned short)(~sum);
+}
+
 __attribute__((unused)) static inline unsigned short
 zmap_ip_checksum(unsigned short *buf)
 {
@@ -40,9 +54,9 @@ zmap_ip_checksum(unsigned short *buf)
 }
 
 __attribute__((unused)) static inline unsigned short
-icmp_checksum(unsigned short *buf)
+icmp_checksum(unsigned short *buf, size_t buflen)
 {
-	return in_checksum(buf, (int)sizeof(struct icmp));
+	return in_icmp_checksum(buf, buflen);
 }
 
 __attribute__((unused)) static inline uint16_t icmp6_checksum(

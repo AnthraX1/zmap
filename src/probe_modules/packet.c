@@ -102,6 +102,14 @@ void make_eth_header(struct ether_header *ethh, macaddr_t *src, macaddr_t *dst)
 	ethh->ether_type = htons(ETHERTYPE_IP);
 }
 
+void make_eth_header_ethertype(struct ether_header *ethh, macaddr_t *src, macaddr_t *dst, uint16_t ethertype)
+{
+	memcpy(ethh->ether_shost, src, ETHER_ADDR_LEN);
+	memcpy(ethh->ether_dhost, dst, ETHER_ADDR_LEN);
+	ethh->ether_type = htons(ethertype);
+}
+
+
 void make_ip_header(struct ip *iph, uint8_t protocol, uint16_t len)
 {
 	iph->ip_hl = 5;  // Internet Header Length
