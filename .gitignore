@@ -37,4 +37,9 @@ install_manifest.txt
 _CPack_Packages/*
 src/ztests
 src/zblocklist
-src/zblocklist
+src/src/ztopt.ggo
+src/src/topt.ggo
+src/src/zbopt.ggo
+src/src/zitopt.ggo
+src/src/zopt.ggo
+
